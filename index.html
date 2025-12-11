@@ -245,6 +245,11 @@
     </div>
 
     <script>
+        // Configuration constants
+        const GCODE_SCALE_FACTOR = 0.5; // mm per pixel - adjust based on your machine
+        const MAX_PROCESSING_DIMENSION = 400; // Maximum width/height for image processing
+        const EDGE_DETECTION_THRESHOLD = 50; // Threshold for edge detection
+        
         // Global variables
         let gcodeContent = '';
         let currentImageName = '';
@@ -324,7 +329,7 @@
             const ctx = canvas.getContext('2d');
             
             // Set reasonable dimensions for processing
-            const maxDim = 400;
+            const maxDim = MAX_PROCESSING_DIMENSION;
             let width = img.width;
             let height = img.height;
             
@@ -373,7 +378,7 @@
 
         function detectEdges(grayData, width, height) {
             const edges = new Uint8Array(width * height);
-            const threshold = 50;
+            const threshold = EDGE_DETECTION_THRESHOLD;
             
             // Simple edge detection using gradient
             for (let y = 1; y < height - 1; y++) {
@@ -410,7 +415,7 @@
             gcode.push('');
             
             // Scale factor (convert pixels to mm)
-            const scale = 0.5; // 0.5mm per pixel
+            const scale = GCODE_SCALE_FACTOR;
             let penDown = false;
             
             // Scan image and create path
@@ -429,7 +434,7 @@
                         } else {
                             gcode.push('G1 X' + gX + ' Y' + gY);
                         }
-                    } else if (penDown && (x === width - 1 || edges[idx + 1] === 0)) {
+                    } else if (penDown && (x === width - 1 || (x < width - 1 && edges[idx + 1] === 0))) {
                         gcode.push('G0 Z5 ; Pen up');
                         penDown = false;
                     }
